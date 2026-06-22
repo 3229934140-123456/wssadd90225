@@ -6,6 +6,18 @@
   padding-bottom: 200rpx;
 }
 
+.loadingWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+}
+
+.loadingText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}
+
 .countdownSection {
   margin: $spacing-lg 0;
 }
@@ -25,6 +37,12 @@
   display: flex;
   align-items: center;
   gap: $spacing-md;
+  transition: all $transition-base;
+}
+
+.reminderCardActive {
+  box-shadow: $shadow-card-hover;
+  border: 2rpx solid $color-primary;
 }
 
 .reminderIcon {

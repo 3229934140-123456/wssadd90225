@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text } from '@tarojs/components';
 import classnames from 'classnames';
-import { formatCountdown, getRemainingTime } from '@/utils/timer';
+import { formatCountdown, getRemainingTime, OVERTIME_GRACE_MS } from '@/utils/timer';
 import type { AnesthesiaRecord } from '@/types';
 import styles from './index.module.scss';
 
@@ -13,21 +13,39 @@ const CountdownDisplay: React.FC<CountdownDisplayProps> = ({ record }) => {
   const remaining = getRemainingTime(record.startTime, record.duration);
   const totalMs = record.duration * 60 * 1000;
   const progress = Math.max(0, Math.min(100, ((totalMs - remaining) / totalMs) * 100));
-  const isOvertime = remaining <= 0;
+  const isOvertime = remaining <= -OVERTIME_GRACE_MS;
+  const isTimeUp = !isOvertime && remaining <= 0;
   const isWarning = remaining > 0 && remaining <= 10 * 60 * 1000;
 
+  const displayText = (() => {
+    if (isOvertime) return '已超时';
+    if (isTimeUp) return '该揭麻了';
+    return formatCountdown(remaining);
+  })();
+
+  const displayLabel = (() => {
+    if (isOvertime) return '请立即处理';
+    if (isTimeUp) return '时间到了，请揭麻';
+    return '剩余时间';
+  })();
+
   return (
-    <View className={classnames(styles.container, isOvertime && styles.overtime, isWarning && styles.warning)}>
+    <View className={classnames(
+      styles.container,
+      isOvertime && styles.overtime,
+      isTimeUp && styles.timeUp,
+      isWarning && styles.warning
+    )}>
       <View className={styles.ringWrapper}>
         <View className={styles.ringBg}>
           <View className={styles.ringProgress} style={{ height: `${progress}%` }} />
         </View>
         <View className={styles.ringContent}>
           <Text className={styles.countdownText}>
-            {isOvertime ? '已超时' : formatCountdown(remaining)}
+            {displayText}
           </Text>
           <Text className={styles.countdownLabel}>
-            {isOvertime ? '请立即处理' : '剩余时间'}
+            {displayLabel}
           </Text>
         </View>
       </View>

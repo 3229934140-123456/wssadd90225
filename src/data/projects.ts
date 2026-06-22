@@ -70,7 +70,7 @@ export const statusLabels: Record<string, string> = {
   pending: '待执行',
   counting: '倒计时中',
   warning_10min: '即将到点',
-  time_up: '已到点',
+  time_up: '该揭麻了',
   overtime: '已超时',
   completed: '已完成',
 };
@@ -79,7 +79,7 @@ export const statusColors: Record<string, string> = {
   pending: '#86909C',
   counting: '#3B82F6',
   warning_10min: '#F59E0B',
-  time_up: '#F59E0B',
+  time_up: '#F97316',
   overtime: '#EF4444',
   completed: '#10B981',
 };

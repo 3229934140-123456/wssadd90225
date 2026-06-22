@@ -24,7 +24,7 @@ export interface AnesthesiaRecord {
   customerFeeling?: string;
   rednessLevel?: 'none' | 'mild' | 'moderate' | 'severe';
   extended?: boolean;
-  reviewId?: string;
+  comment?: string;
 }
 
 export interface KnowledgeTip {
@@ -47,16 +47,13 @@ export interface Review {
   createdAt: string;
 }
 
-export interface UserProfile {
-  id: string;
-  name: string;
-  avatar: string;
-  level: string;
+export interface UserStats {
   consecutiveNoOvertimeDays: number;
   standardRecordCount: number;
   anomalyReportCount: number;
   totalTasks: number;
   completedTasks: number;
+  overtimeTasks: number;
 }
 
 export interface GrowthRankItem {

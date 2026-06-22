@@ -14,6 +14,22 @@ interface TaskCardProps {
 const TaskCard: React.FC<TaskCardProps> = ({ record, onClick }) => {
   const remaining = getRemainingTime(record.startTime, record.duration);
   const isActive = record.status === 'counting' || record.status === 'warning_10min' || record.status === 'time_up';
+  const isOvertime = record.status === 'overtime';
+
+  const displayStatus = (() => {
+    if (record.status === 'time_up') return '该揭麻了';
+    if (record.status === 'overtime') return '已超时';
+    return statusLabels[record.status];
+  })();
+
+  const displayColor = statusColors[record.status];
+
+  const countdownDisplay = (() => {
+    if (record.status === 'time_up') return '该揭麻了';
+    if (isOvertime) return '已超时';
+    if (remaining <= 0) return '已超时';
+    return formatCountdown(remaining);
+  })();
 
   return (
     <View
@@ -24,9 +40,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ record, onClick }) => {
         <View className={styles.projectTag}>{record.projectName}</View>
         <View
           className={styles.statusBadge}
-          style={{ backgroundColor: `${statusColors[record.status]}15`, color: statusColors[record.status] }}
+          style={{ backgroundColor: `${displayColor}15`, color: displayColor }}
         >
-          {statusLabels[record.status]}
+          {displayStatus}
         </View>
       </View>
       <View className={styles.body}>
@@ -45,13 +61,19 @@ const TaskCard: React.FC<TaskCardProps> = ({ record, onClick }) => {
           </Text>
         </View>
       </View>
-      {isActive && (
+      {(isActive || isOvertime) && (
         <View className={styles.countdownRow}>
-          <Text className={styles.countdownLabel}>剩余时间</Text>
+          <Text className={styles.countdownLabel}>
+            {record.status === 'time_up' ? '已到点' : isOvertime ? '超时状态' : '剩余时间'}
+          </Text>
           <Text
-            className={classnames(styles.countdownValue, remaining <= 0 && styles.overtime)}
+            className={classnames(
+              styles.countdownValue,
+              (isOvertime || remaining <= 0) && styles.overtime,
+              record.status === 'time_up' && styles.timeUp
+            )}
           >
-            {remaining <= 0 ? '已超时' : formatCountdown(remaining)}
+            {countdownDisplay}
           </Text>
         </View>
       )}

@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Textarea } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
+import dayjs from 'dayjs';
 import { useTaskStore } from '@/store/useTaskStore';
-import { mockReviews, rednessLabels, reviewRatingLabels } from '@/data/tasks';
-import type { AnesthesiaRecord } from '@/types';
+import { rednessLabels, reviewRatingLabels } from '@/data/tasks';
+import type { AnesthesiaRecord, ReviewRating, Review } from '@/types';
+import { generateId } from '@/utils/timer';
 import styles from './index.module.scss';
 
 const feelingOptions = ['无痛感', '轻微刺痛', '明显刺痛', '灼热感', '不适感强'];
 const rednessOptions = Object.entries(rednessLabels);
+const ratingOptions = Object.entries(reviewRatingLabels) as [ReviewRating, string][];
 
 const ReviewPage: React.FC = () => {
   const [record, setRecord] = useState<AnesthesiaRecord | null>(null);
@@ -16,7 +19,14 @@ const ReviewPage: React.FC = () => {
   const [redness, setRedness] = useState('');
   const [extended, setExtended] = useState(false);
   const [comment, setComment] = useState('');
-  const { records, updateRecordReview } = useTaskStore();
+  const [selectedRatings, setSelectedRatings] = useState<ReviewRating[]>([]);
+  const [mentorComment, setMentorComment] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const { records, reviews, updateRecordReview, addReview, hydrate, hydrated } = useTaskStore();
+
+  useEffect(() => {
+    if (!hydrated) hydrate();
+  }, []);
 
   useEffect(() => {
     const params = Taro.getCurrentInstance().router?.params;
@@ -27,14 +37,29 @@ const ReviewPage: React.FC = () => {
         if (found.customerFeeling) setFeeling(found.customerFeeling);
         if (found.rednessLevel) setRedness(found.rednessLevel);
         if (found.extended !== undefined) setExtended(found.extended);
+        if (found.comment) setComment(found.comment);
         console.info('[Review] Record loaded:', found.id);
       }
     }
-  }, [records]);
+  }, [records, hydrated]);
 
-  const existingReview = record ? mockReviews.find((r) => r.recordId === record.id) : null;
+  const existingReview = record ? reviews.find((r) => r.recordId === record.id) : null;
 
-  const handleSubmit = () => {
+  useEffect(() => {
+    if (existingReview) {
+      setSelectedRatings(existingReview.ratings);
+      setMentorComment(existingReview.comment);
+      setSubmitted(true);
+    }
+  }, [existingReview]);
+
+  const toggleRating = (rating: ReviewRating) => {
+    setSelectedRatings((prev) =>
+      prev.includes(rating) ? prev.filter((r) => r !== rating) : [...prev, rating]
+    );
+  };
+
+  const handleSubmitRecord = () => {
     if (!record) return;
     if (!feeling || !redness) {
       Taro.showToast({ title: '请填写顾客感受和红斑情况', icon: 'none' });
@@ -43,14 +68,36 @@ const ReviewPage: React.FC = () => {
 
     updateRecordReview(record.id, {
       customerFeeling: feeling,
-      rednessLevel: redness as any,
+      rednessLevel: redness as AnesthesiaRecord['rednessLevel'],
       extended,
+      comment,
       status: 'completed',
     });
 
+    console.info('[Review] Record submitted for:', record.id);
+    Taro.showToast({ title: '记录已保存', icon: 'success' });
+  };
+
+  const handleSubmitReview = () => {
+    if (!record) return;
+    if (selectedRatings.length === 0) {
+      Taro.showToast({ title: '请至少选择一个评价标签', icon: 'none' });
+      return;
+    }
+
+    const review: Review = {
+      id: generateId(),
+      recordId: record.id,
+      mentorName: '带教老师',
+      ratings: selectedRatings,
+      comment: mentorComment,
+      createdAt: dayjs().format('YYYY-MM-DD HH:mm'),
+    };
+
+    addReview(review);
+    setSubmitted(true);
     console.info('[Review] Review submitted for:', record.id);
-    Taro.showToast({ title: '提交成功', icon: 'success' });
-    setTimeout(() => Taro.navigateBack(), 1000);
+    Taro.showToast({ title: '点评已提交', icon: 'success' });
   };
 
   if (!record) {
@@ -62,6 +109,8 @@ const ReviewPage: React.FC = () => {
       </View>
     );
   }
+
+  const isRecordSaved = !!record.customerFeeling && !!record.rednessLevel;
 
   return (
     <ScrollView scrollY className={styles.container}>
@@ -139,12 +188,52 @@ const ReviewPage: React.FC = () => {
             />
           </View>
         </View>
+
+        {!isRecordSaved && (
+          <View className={styles.submitBtn} onClick={handleSubmitRecord} style={{ marginTop: '24rpx' }}>
+            <Text>保存揭麻记录</Text>
+          </View>
+        )}
       </View>
 
-      {existingReview && (
-        <View className={styles.reviewSection}>
-          <Text className={styles.sectionTitle}>师傅点评</Text>
-          <View className={styles.reviewCard}>
+      <View className={styles.section}>
+        <Text className={styles.sectionTitle}>师傅点评</Text>
+        <View className={styles.formCard}>
+          <View className={styles.formItem}>
+            <Text className={styles.formLabel}>评价标签（可多选）</Text>
+            <View className={styles.optionRow}>
+              {ratingOptions.map(([key, label]) => (
+                <View
+                  key={key}
+                  className={classnames(styles.optionTag, selectedRatings.includes(key) && styles.optionTagActive)}
+                  onClick={() => !submitted && toggleRating(key)}
+                >
+                  <Text>{label}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View className={styles.formItem}>
+            <Text className={styles.formLabel}>点评内容</Text>
+            <Textarea
+              className={styles.textArea}
+              placeholder="写下对这次操作的评价..."
+              value={mentorComment}
+              onInput={(e) => !submitted && setMentorComment(e.detail.value)}
+              disabled={submitted}
+            />
+          </View>
+        </View>
+
+        {!submitted && (
+          <View className={styles.submitBtn} onClick={handleSubmitReview} style={{ marginTop: '24rpx' }}>
+            <Text>提交点评</Text>
+          </View>
+        )}
+
+        {submitted && existingReview && (
+          <View className={styles.reviewCard} style={{ marginTop: '24rpx' }}>
             <View className={styles.reviewHeader}>
               <Text className={styles.mentorName}>{existingReview.mentorName}</Text>
               <Text className={styles.reviewTime}>{existingReview.createdAt}</Text>
@@ -156,18 +245,12 @@ const ReviewPage: React.FC = () => {
                 </View>
               ))}
             </View>
-            <Text className={styles.reviewComment}>{existingReview.comment}</Text>
+            {existingReview.comment && (
+              <Text className={styles.reviewComment}>{existingReview.comment}</Text>
+            )}
           </View>
-        </View>
-      )}
-
-      {!existingReview && (
-        <View className={styles.bottomBar}>
-          <View className={styles.submitBtn} onClick={handleSubmit}>
-            <Text>提交记录</Text>
-          </View>
-        </View>
-      )}
+        )}
+      </View>
     </ScrollView>
   );
 };

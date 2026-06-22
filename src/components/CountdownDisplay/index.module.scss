@@ -15,6 +15,11 @@
   border: 2rpx solid $color-overtime;
 }
 
+.timeUp {
+  background: #FFF7ED;
+  border: 2rpx solid #F97316;
+}
+
 .warning {
   background: $color-warning-bg;
   border: 2rpx solid $color-warning;
@@ -55,6 +60,10 @@
   background: linear-gradient(180deg, $color-overtime 0%, #FCA5A5 100%);
 }
 
+.timeUp .ringProgress {
+  background: linear-gradient(180deg, #F97316 0%, #FDBA74 100%);
+}
+
 .warning .ringProgress {
   background: linear-gradient(180deg, $color-warning 0%, #FCD34D 100%);
 }
@@ -76,6 +85,10 @@
   background: #FFF1F1;
 }
 
+.timeUp .ringContent {
+  background: #FFF7ED;
+}
+
 .warning .ringContent {
   background: #FFFBEB;
 }
@@ -91,6 +104,10 @@
 
 .overtime .countdownText {
   color: $color-overtime;
+}
+
+.timeUp .countdownText {
+  color: #F97316;
 }
 
 .warning .countdownText {

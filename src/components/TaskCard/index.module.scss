@@ -23,7 +23,8 @@
 }
 
 .status_time_up {
-  border-left: 6rpx solid $color-warning;
+  border-left: 6rpx solid #F97316;
+  background: #FFF7ED;
 }
 
 .status_overtime {
@@ -103,4 +104,8 @@
 
 .overtime {
   color: $color-overtime;
+}
+
+.timeUp {
+  color: #F97316;
 }
