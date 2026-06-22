@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, ScrollView } from '@tarojs/components';
 import classnames from 'classnames';
 import { useTaskStore } from '@/store/useTaskStore';
-import { computeStats } from '@/utils/timer';
+import { computeStatsInRange, StatsTimeRange } from '@/utils/timer';
 import { mockGrowthRank } from '@/data/tasks';
 import styles from './index.module.scss';
 
@@ -13,14 +13,22 @@ const PROFILE = {
   level: '初级护士',
 };
 
+const RANGE_TABS: { key: StatsTimeRange; label: string }[] = [
+  { key: 'today', label: '今日' },
+  { key: 'week', label: '近7天' },
+  { key: 'month', label: '近30天' },
+  { key: 'all', label: '总榜' },
+];
+
 const GrowthPage: React.FC = () => {
+  const [range, setRange] = useState<StatsTimeRange>('all');
   const { records, hydrate, hydrated } = useTaskStore();
 
   useEffect(() => {
     if (!hydrated) hydrate();
   }, []);
 
-  const myStats = computeStats(records);
+  const myStats = computeStatsInRange(records, range);
   const myScore = myStats.standardRecordCount * 2 + myStats.consecutiveNoOvertimeDays * 3 - myStats.anomalyReportCount;
 
   const allRankItems = [
@@ -40,6 +48,18 @@ const GrowthPage: React.FC = () => {
 
   return (
     <ScrollView scrollY className={styles.container}>
+      <View className={styles.rangeTabs}>
+        {RANGE_TABS.map((tab) => (
+          <View
+            key={tab.key}
+            className={classnames(styles.rangeTab, range === tab.key && styles.rangeTabActive)}
+            onClick={() => setRange(tab.key)}
+          >
+            <Text>{tab.label}</Text>
+          </View>
+        ))}
+      </View>
+
       <View className={styles.myRankCard}>
         <View className={styles.myRankHeader}>
           <Image className={styles.myRankAvatar} src={PROFILE.avatar} mode="aspectFill" />

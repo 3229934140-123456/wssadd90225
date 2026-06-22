@@ -51,6 +51,7 @@ const ClockinPage: React.FC = () => {
       startTime: Date.now(),
       duration,
       status: 'counting',
+      timeline: [{ type: 'clockIn', timestamp: Date.now() }],
     };
 
     addRecord(record);

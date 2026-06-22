@@ -4,7 +4,8 @@ import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import TaskCard from '@/components/TaskCard';
 import { useTaskStore } from '@/store/useTaskStore';
-import { getRemainingTime } from '@/utils/timer';
+import { getEffectiveStatus } from '@/utils/timer';
+import { projects } from '@/data/projects';
 import styles from './index.module.scss';
 
 const filterTabs: { key: string; label: string }[] = [
@@ -14,10 +15,12 @@ const filterTabs: { key: string; label: string }[] = [
   { key: 'time_up', label: '该揭麻了' },
   { key: 'overtime', label: '已超时' },
   { key: 'completed', label: '已完成' },
+  { key: 'anomaly', label: '异常记录' },
 ];
 
 const TasksPage: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState('all');
+  const [selectedProject, setSelectedProject] = useState('all');
   const [, setTick] = useState(0);
   const { records, hydrate, hydrated } = useTaskStore();
 
@@ -30,24 +33,18 @@ const TasksPage: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const activeStatuses = ['counting', 'warning_10min', 'time_up'];
-
   const enrichedRecords = records.map((r) => {
-    if (activeStatuses.includes(r.status)) {
-      const remaining = getRemainingTime(r.startTime, r.duration);
-      if (remaining <= -120000 && r.status !== 'overtime') {
-        return { ...r, status: 'overtime' as const };
-      }
-      if (remaining <= 0 && remaining > -120000 && r.status !== 'time_up') {
-        return { ...r, status: 'time_up' as const };
-      }
-    }
-    return r;
+    const effectiveStatus = getEffectiveStatus(r);
+    return { ...r, status: effectiveStatus };
   });
 
   const filteredRecords = enrichedRecords.filter((r) => {
-    if (activeFilter === 'all') return true;
-    return r.status === activeFilter;
+    if (activeFilter === 'anomaly') {
+      return r.status === 'overtime' || r.status === 'time_up';
+    }
+    if (activeFilter !== 'all' && r.status !== activeFilter) return false;
+    if (selectedProject !== 'all' && r.projectId !== selectedProject) return false;
+    return true;
   });
 
   const activeCount = enrichedRecords.filter((r) =>
@@ -60,7 +57,8 @@ const TasksPage: React.FC = () => {
   const handleTaskClick = useCallback((id: string) => {
     const record = records.find((r) => r.id === id);
     if (!record) return;
-    if (record.status === 'completed') {
+    const effectiveStatus = getEffectiveStatus(record);
+    if (effectiveStatus === 'completed') {
       Taro.navigateTo({ url: `/pages/review/index?id=${id}` });
     } else {
       Taro.navigateTo({ url: `/pages/countdown/index?id=${id}` });
@@ -92,7 +90,7 @@ const TasksPage: React.FC = () => {
         {filterTabs.map((tab) => (
           <View
             key={tab.key}
-            className={classnames(styles.filterBtn, activeFilter === tab.key && styles.filterBtnActive)}
+            className={classnames(styles.filterBtn, activeFilter === tab.key && styles.filterBtnActive, tab.key === 'anomaly' && styles.filterBtnAnomaly)}
             onClick={() => setActiveFilter(tab.key)}
           >
             <Text>{tab.label}</Text>
@@ -100,12 +98,32 @@ const TasksPage: React.FC = () => {
         ))}
       </ScrollView>
 
+      {activeFilter !== 'anomaly' && (
+        <ScrollView scrollX className={styles.projectRow}>
+          <View
+            className={classnames(styles.projectBtn, selectedProject === 'all' && styles.projectBtnActive)}
+            onClick={() => setSelectedProject('all')}
+          >
+            <Text>全部项目</Text>
+          </View>
+          {projects.map((p) => (
+            <View
+              key={p.id}
+              className={classnames(styles.projectBtn, selectedProject === p.id && styles.projectBtnActive)}
+              onClick={() => setSelectedProject(p.id)}
+            >
+              <Text>{p.name}</Text>
+            </View>
+          ))}
+        </ScrollView>
+      )}
+
       <View className={styles.taskList}>
         {filteredRecords.length === 0 ? (
           <View className={styles.emptyState}>
             <Text className={styles.emptyIcon}>📋</Text>
             <Text className={styles.emptyText}>
-              {records.length === 0 ? '暂无任务，去开麻打卡创建吧' : '暂无该状态的任务'}
+              {records.length === 0 ? '暂无任务，去开麻打卡创建吧' : '暂无符合条件的任务'}
             </Text>
           </View>
         ) : (

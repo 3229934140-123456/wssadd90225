@@ -5,8 +5,9 @@ import classnames from 'classnames';
 import dayjs from 'dayjs';
 import { useTaskStore } from '@/store/useTaskStore';
 import { rednessLabels, reviewRatingLabels } from '@/data/tasks';
-import type { AnesthesiaRecord, ReviewRating, Review } from '@/types';
+import { getTimelineLabel, getTimelineIcon, ensureTimeline, getEffectiveStatus } from '@/utils/timer';
 import { generateId } from '@/utils/timer';
+import type { AnesthesiaRecord, ReviewRating, Review } from '@/types';
 import styles from './index.module.scss';
 
 const feelingOptions = ['无痛感', '轻微刺痛', '明显刺痛', '灼热感', '不适感强'];
@@ -22,7 +23,7 @@ const ReviewPage: React.FC = () => {
   const [selectedRatings, setSelectedRatings] = useState<ReviewRating[]>([]);
   const [mentorComment, setMentorComment] = useState('');
   const [submitted, setSubmitted] = useState(false);
-  const { records, reviews, updateRecordReview, addReview, hydrate, hydrated } = useTaskStore();
+  const { records, reviews, updateRecordReview, addReview, addTimelineEvent, hydrate, hydrated } = useTaskStore();
 
   useEffect(() => {
     if (!hydrated) hydrate();
@@ -38,7 +39,6 @@ const ReviewPage: React.FC = () => {
         if (found.rednessLevel) setRedness(found.rednessLevel);
         if (found.extended !== undefined) setExtended(found.extended);
         if (found.comment) setComment(found.comment);
-        console.info('[Review] Record loaded:', found.id);
       }
     }
   }, [records, hydrated]);
@@ -66,6 +66,7 @@ const ReviewPage: React.FC = () => {
       return;
     }
 
+    const wasCompleted = record.status === 'completed';
     updateRecordReview(record.id, {
       customerFeeling: feeling,
       rednessLevel: redness as AnesthesiaRecord['rednessLevel'],
@@ -74,7 +75,10 @@ const ReviewPage: React.FC = () => {
       status: 'completed',
     });
 
-    console.info('[Review] Record submitted for:', record.id);
+    if (!wasCompleted) {
+      addTimelineEvent(record.id, { type: 'completed', timestamp: Date.now() });
+    }
+
     Taro.showToast({ title: '记录已保存', icon: 'success' });
   };
 
@@ -95,8 +99,8 @@ const ReviewPage: React.FC = () => {
     };
 
     addReview(review);
+    addTimelineEvent(record.id, { type: 'reviewed', timestamp: Date.now() });
     setSubmitted(true);
-    console.info('[Review] Review submitted for:', record.id);
     Taro.showToast({ title: '点评已提交', icon: 'success' });
   };
 
@@ -111,6 +115,8 @@ const ReviewPage: React.FC = () => {
   }
 
   const isRecordSaved = !!record.customerFeeling && !!record.rednessLevel;
+  const effectiveStatus = getEffectiveStatus(record);
+  const timeline = ensureTimeline(record);
 
   return (
     <ScrollView scrollY className={styles.container}>
@@ -129,6 +135,40 @@ const ReviewPage: React.FC = () => {
           <Text className={styles.recordValue}>
             {{ normal: '正常', sensitive: '敏感', damaged: '受损', inflamed: '炎症' }[record.skinCondition]}
           </Text>
+        </View>
+        <View className={styles.recordRow}>
+          <Text className={styles.recordLabel}>状态</Text>
+          <Text className={styles.recordValue} style={{
+            color: effectiveStatus === 'overtime' ? '#EF4444'
+              : effectiveStatus === 'time_up' ? '#F97316'
+              : effectiveStatus === 'completed' ? '#10B981'
+              : '#3B82F6'
+          }}>
+            {{ counting: '倒计时中', warning_10min: '即将到点', time_up: '该揭麻了', overtime: '已超时', completed: '已完成' }[effectiveStatus] || effectiveStatus}
+          </Text>
+        </View>
+      </View>
+
+      <View className={styles.section}>
+        <Text className={styles.sectionTitle}>复盘时间线</Text>
+        <View className={styles.timelineCard}>
+          {timeline.length === 0 ? (
+            <Text className={styles.timelineEmpty}>暂无时间线记录</Text>
+          ) : (
+            timeline.map((event, idx) => (
+              <View key={`${event.type}_${event.timestamp}`} className={styles.timelineItem}>
+                <View className={styles.timelineLeft}>
+                  <Text className={styles.timelineIcon}>{getTimelineIcon(event.type)}</Text>
+                  {idx < timeline.length - 1 && <View className={styles.timelineLine} />}
+                </View>
+                <View className={styles.timelineRight}>
+                  <Text className={styles.timelineLabel}>{getTimelineLabel(event.type)}</Text>
+                  <Text className={styles.timelineTime}>{dayjs(event.timestamp).format('HH:mm:ss')}</Text>
+                  {event.note && <Text className={styles.timelineNote}>{event.note}</Text>}
+                </View>
+              </View>
+            ))
+          )}
         </View>
       </View>
 

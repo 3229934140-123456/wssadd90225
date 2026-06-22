@@ -10,6 +10,14 @@ export type SkinCondition = 'normal' | 'sensitive' | 'damaged' | 'inflamed';
 
 export type TaskStatus = 'pending' | 'counting' | 'warning_10min' | 'time_up' | 'overtime' | 'completed';
 
+export type TimelineEventType = 'clockIn' | 'warning10min' | 'timeUp' | 'overtime' | 'completed' | 'reviewed';
+
+export interface TimelineEvent {
+  type: TimelineEventType;
+  timestamp: number;
+  note?: string;
+}
+
 export interface AnesthesiaRecord {
   id: string;
   projectId: string;
@@ -25,6 +33,7 @@ export interface AnesthesiaRecord {
   rednessLevel?: 'none' | 'mild' | 'moderate' | 'severe';
   extended?: boolean;
   comment?: string;
+  timeline?: TimelineEvent[];
 }
 
 export interface KnowledgeTip {

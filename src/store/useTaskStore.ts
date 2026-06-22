@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import Taro from '@tarojs/taro';
-import type { AnesthesiaRecord, TaskStatus, Review } from '@/types';
+import type { AnesthesiaRecord, TaskStatus, Review, TimelineEvent } from '@/types';
 
 const STORAGE_RECORDS_KEY = 'fuma_records';
 const STORAGE_REVIEWS_KEY = 'fuma_reviews';
@@ -35,6 +35,7 @@ interface TaskStore {
   updateRecordReview: (id: string, data: Partial<AnesthesiaRecord>) => void;
   deleteRecord: (id: string) => void;
   addReview: (review: Review) => void;
+  addTimelineEvent: (recordId: string, event: TimelineEvent) => void;
 }
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
@@ -93,6 +94,21 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       const next = [...state.reviews, review];
       saveToStorage(STORAGE_REVIEWS_KEY, next);
       return { reviews: next };
+    });
+  },
+
+  addTimelineEvent: (recordId, event) => {
+    set((state) => {
+      const next = state.records.map((r) => {
+        if (r.id !== recordId) return r;
+        const timeline = r.timeline ? [...r.timeline] : [];
+        if (timeline.some((e) => e.type === event.type)) return r;
+        timeline.push(event);
+        timeline.sort((a, b) => a.timestamp - b.timestamp);
+        return { ...r, timeline };
+      });
+      saveToStorage(STORAGE_RECORDS_KEY, next);
+      return { records: next };
     });
   },
 }));

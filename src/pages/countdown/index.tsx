@@ -6,7 +6,7 @@ import CountdownDisplay from '@/components/CountdownDisplay';
 import { useTaskStore } from '@/store/useTaskStore';
 import { getRemainingTime, OVERTIME_GRACE_MS } from '@/utils/timer';
 import { knowledgeTips } from '@/data/knowledge';
-import type { AnesthesiaRecord, TaskStatus } from '@/types';
+import type { AnesthesiaRecord, TaskStatus, TimelineEvent } from '@/types';
 import styles from './index.module.scss';
 
 type Phase = 'counting' | 'warning_10min' | 'time_up' | 'overtime' | 'completed';
@@ -20,7 +20,7 @@ const PHASE_CONFIG: Record<string, { icon: string; title: string; desc: string }
 const CountdownPage: React.FC = () => {
   const [record, setRecord] = useState<AnesthesiaRecord | null>(null);
   const [, setTick] = useState(0);
-  const { records, updateRecordStatus } = useTaskStore();
+  const { records, updateRecordStatus, addTimelineEvent } = useTaskStore();
   const lastNotifiedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -68,6 +68,15 @@ const CountdownPage: React.FC = () => {
 
       if (newStatus) {
         updateRecordStatus(record.id, newStatus);
+        const eventType: TimelineEvent['type'] | null = (() => {
+          if (newStatus === 'overtime') return 'overtime';
+          if (newStatus === 'time_up') return 'timeUp';
+          if (newStatus === 'warning_10min') return 'warning10min';
+          return null;
+        })();
+        if (eventType) {
+          addTimelineEvent(record.id, { type: eventType, timestamp: Date.now() });
+        }
       }
     }, 1000);
     return () => clearInterval(timer);
@@ -106,6 +115,7 @@ const CountdownPage: React.FC = () => {
 
   const handleComplete = () => {
     updateRecordStatus(record.id, 'completed');
+    addTimelineEvent(record.id, { type: 'completed', timestamp: Date.now() });
     Taro.navigateTo({ url: `/pages/review/index?id=${record.id}` });
   };
 

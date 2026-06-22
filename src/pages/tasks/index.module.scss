@@ -68,6 +68,49 @@
   color: $color-text-white;
 }
 
+.filterBtnAnomaly {
+  border-color: #EF4444;
+  color: #EF4444;
+
+  &.filterBtnActive {
+    background: #EF4444;
+    color: $color-text-white;
+  }
+}
+
+.projectRow {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+  overflow-x: auto;
+  @include scroll-x-container;
+}
+
+.projectBtn {
+  @include button-reset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 52rpx;
+  padding: 0 20rpx;
+  border-radius: $radius-round;
+  background: $color-bg-page;
+  border: 1rpx solid $color-border;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  white-space: nowrap;
+  transition: all $transition-fast;
+  flex-shrink: 0;
+  @include scroll-x-item(auto);
+}
+
+.projectBtnActive {
+  background: rgba($color-primary, 0.1);
+  border-color: $color-primary;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
 .sectionTitle {
   font-size: $font-size-lg;
   font-weight: $font-weight-semibold;

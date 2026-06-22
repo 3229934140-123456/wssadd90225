@@ -6,6 +6,36 @@
   padding-bottom: 40rpx;
 }
 
+.rangeTabs {
+  display: flex;
+  gap: $spacing-sm;
+  padding: $spacing-lg 0 $spacing-sm;
+}
+
+.rangeTab {
+  @include button-reset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 56rpx;
+  padding: 0 28rpx;
+  border-radius: $radius-round;
+  background: $color-bg-card;
+  border: 1rpx solid $color-border;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  white-space: nowrap;
+  transition: all $transition-fast;
+  flex: 1;
+}
+
+.rangeTabActive {
+  background: $color-primary;
+  border-color: $color-primary;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
 .myRankCard {
   background: linear-gradient(135deg, $color-primary 0%, $color-accent-pink 100%);
   border-radius: $radius-xl;
