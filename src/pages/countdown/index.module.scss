@@ -1,0 +1,143 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  padding: 0 $page-padding;
+  padding-bottom: 200rpx;
+}
+
+.countdownSection {
+  margin: $spacing-lg 0;
+}
+
+.reminderCards {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.reminderCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.reminderIcon {
+  font-size: 48rpx;
+  width: 64rpx;
+  text-align: center;
+}
+
+.reminderContent {
+  flex: 1;
+}
+
+.reminderTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+}
+
+.reminderDesc {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  @include text-ellipsis-multi(2);
+}
+
+.reminderStatus {
+  font-size: $font-size-sm;
+  padding: 4rpx 16rpx;
+  border-radius: $radius-round;
+  white-space: nowrap;
+}
+
+.statusPending {
+  background: $color-divider;
+  color: $color-text-tertiary;
+}
+
+.statusActive {
+  background: $color-counting-light;
+  color: $color-counting;
+}
+
+.statusWarning {
+  background: $color-warning-bg;
+  color: $color-warning;
+}
+
+.statusDone {
+  background: $color-completed-light;
+  color: $color-completed;
+}
+
+.actionSection {
+  margin-top: $spacing-lg;
+}
+
+.actionBtn {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+  margin-bottom: $spacing-md;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.primaryBtn {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+}
+
+.dangerBtn {
+  background: $color-overtime-light;
+  border: 2rpx solid $color-overtime;
+  color: $color-overtime;
+}
+
+.secondaryBtn {
+  background: $color-bg-card;
+  border: 2rpx solid $color-border;
+  color: $color-text-secondary;
+}
+
+.bottomBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: $spacing-lg $spacing-lg;
+  padding-bottom: calc(#{$spacing-lg} + env(safe-area-inset-bottom));
+  background: $color-bg-card;
+  box-shadow: $shadow-float;
+}
+
+.completeBtn {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  background: linear-gradient(135deg, $color-completed 0%, #34D399 100%);
+  color: $color-text-white;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}

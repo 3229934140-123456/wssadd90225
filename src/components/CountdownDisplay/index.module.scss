@@ -1,0 +1,131 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  padding: $spacing-xl;
+  box-shadow: $shadow-card;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.overtime {
+  background: $color-overtime-light;
+  border: 2rpx solid $color-overtime;
+}
+
+.warning {
+  background: $color-warning-bg;
+  border: 2rpx solid $color-warning;
+}
+
+.ringWrapper {
+  position: relative;
+  width: 320rpx;
+  height: 320rpx;
+  margin-bottom: $spacing-xl;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ringBg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: $color-divider;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.ringProgress {
+  width: 100%;
+  background: linear-gradient(180deg, $color-primary 0%, $color-primary-light 100%);
+  transition: height 1s linear;
+  border-radius: 0 0 50% 50%;
+}
+
+.overtime .ringProgress {
+  background: linear-gradient(180deg, $color-overtime 0%, #FCA5A5 100%);
+}
+
+.warning .ringProgress {
+  background: linear-gradient(180deg, $color-warning 0%, #FCD34D 100%);
+}
+
+.ringContent {
+  position: relative;
+  z-index: 2;
+  width: 280rpx;
+  height: 280rpx;
+  border-radius: 50%;
+  background: $color-bg-card;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.overtime .ringContent {
+  background: #FFF1F1;
+}
+
+.warning .ringContent {
+  background: #FFFBEB;
+}
+
+.countdownText {
+  font-size: 64rpx;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  margin-bottom: $spacing-sm;
+}
+
+.overtime .countdownText {
+  color: $color-overtime;
+}
+
+.warning .countdownText {
+  color: $color-warning;
+}
+
+.countdownLabel {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.infoSection {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.infoItem {
+  width: calc(50% - #{$spacing-sm} / 2);
+  display: flex;
+  flex-direction: column;
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+}
+
+.infoLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: 4rpx;
+}
+
+.infoValue {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}

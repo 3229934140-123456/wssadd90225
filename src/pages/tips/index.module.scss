@@ -1,0 +1,87 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  padding: 0 $page-padding;
+  padding-bottom: 40rpx;
+}
+
+.searchBar {
+  margin: $spacing-lg 0;
+  background: $color-bg-card;
+  border-radius: $radius-round;
+  padding: 0 $spacing-lg;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  box-shadow: $shadow-card;
+}
+
+.searchIcon {
+  font-size: 32rpx;
+  margin-right: $spacing-sm;
+}
+
+.searchInput {
+  flex: 1;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+.categoryScroll {
+  margin-bottom: $spacing-lg;
+  @include scroll-x-container;
+}
+
+.categoryRow {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.categoryItem {
+  @include button-reset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 56rpx;
+  padding: 0 24rpx;
+  border-radius: $radius-round;
+  background: $color-bg-card;
+  border: 1rpx solid $color-border;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  white-space: nowrap;
+  transition: all $transition-fast;
+  @include scroll-x-item(auto);
+}
+
+.categoryItemActive {
+  background: $color-primary;
+  border-color: $color-primary;
+  color: $color-text-white;
+}
+
+.tipList {
+  display: flex;
+  flex-direction: column;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80rpx 0;
+}
+
+.emptyIcon {
+  font-size: 80rpx;
+  margin-bottom: $spacing-lg;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}

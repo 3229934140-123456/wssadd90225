@@ -1,0 +1,187 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  padding: 0 $page-padding;
+  padding-bottom: 200rpx;
+}
+
+.section {
+  margin-bottom: $spacing-lg;
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.optionGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.optionItem {
+  @include button-reset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 64rpx;
+  padding: 0 28rpx;
+  border-radius: $radius-round;
+  background: $color-bg-card;
+  border: 2rpx solid $color-border;
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  white-space: nowrap;
+  transition: all $transition-fast;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.97);
+  }
+}
+
+.optionItemActive {
+  background: $color-tag-bg;
+  border-color: $color-primary;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.photoSection {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.photoArea {
+  width: 100%;
+  height: 320rpx;
+  border: 2rpx dashed $color-border;
+  border-radius: $radius-md;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  transition: all $transition-fast;
+
+  &:active {
+    border-color: $color-primary;
+    background: $color-tag-bg;
+  }
+}
+
+.photoIcon {
+  font-size: 64rpx;
+}
+
+.photoHint {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.photoPreview {
+  width: 100%;
+  height: 320rpx;
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+.photoPreviewImg {
+  width: 100%;
+  height: 100%;
+}
+
+.photoRetake {
+  @include button-reset;
+  margin-top: $spacing-sm;
+  font-size: $font-size-sm;
+  color: $color-primary;
+}
+
+.durationSection {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.durationRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.durationValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.durationUnit {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+  margin-left: 8rpx;
+}
+
+.durationAdjust {
+  display: flex;
+  align-items: center;
+  gap: $spacing-lg;
+}
+
+.durationBtn {
+  @include button-reset;
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: $color-tag-bg;
+  border: 2rpx solid $color-primary;
+  color: $color-primary;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  transition: all $transition-fast;
+
+  &:active {
+    background: $color-primary;
+    color: $color-text-white;
+  }
+}
+
+.submitBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: $spacing-lg $spacing-lg;
+  padding-bottom: calc(#{$spacing-lg} + env(safe-area-inset-bottom));
+  background: $color-bg-card;
+  box-shadow: $shadow-float;
+}
+
+.submitBtn {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.submitBtnDisabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
