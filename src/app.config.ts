@@ -9,6 +9,7 @@ export default defineAppConfig({
     'pages/growth/index',
     'pages/mentor/index',
     'pages/nurse/index',
+    'pages/anomaly/index',
   ],
   window: {
     backgroundTextStyle: 'light',

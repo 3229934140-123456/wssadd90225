@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import Taro from '@tarojs/taro';
-import type { AnesthesiaRecord, TaskStatus, Review, TimelineEvent } from '@/types';
+import type { AnesthesiaRecord, TaskStatus, Review, TimelineEvent, FollowUp } from '@/types';
+import { generateAllMockData } from '@/data/nurses';
 
 const STORAGE_RECORDS_KEY = 'fuma_records';
 const STORAGE_REVIEWS_KEY = 'fuma_reviews';
@@ -36,6 +37,7 @@ interface TaskStore {
   deleteRecord: (id: string) => void;
   addReview: (review: Review) => void;
   addTimelineEvent: (recordId: string, event: TimelineEvent) => void;
+  updateFollowUp: (recordId: string, followUp: FollowUp) => void;
 }
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
@@ -45,8 +47,15 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   hydrate: () => {
     if (get().hydrated) return;
-    const records = loadFromStorage<AnesthesiaRecord[]>(STORAGE_RECORDS_KEY, []);
-    const reviews = loadFromStorage<Review[]>(STORAGE_REVIEWS_KEY, []);
+    let records = loadFromStorage<AnesthesiaRecord[]>(STORAGE_RECORDS_KEY, []);
+    let reviews = loadFromStorage<Review[]>(STORAGE_REVIEWS_KEY, []);
+    if (records.length === 0) {
+      const mock = generateAllMockData();
+      records = mock.records;
+      reviews = mock.reviews;
+      saveToStorage(STORAGE_RECORDS_KEY, records);
+      saveToStorage(STORAGE_REVIEWS_KEY, reviews);
+    }
     console.info('[Store] Hydrated from storage:', records.length, 'records,', reviews.length, 'reviews');
     set({ records, reviews, hydrated: true });
   },
@@ -107,6 +116,16 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         timeline.sort((a, b) => a.timestamp - b.timestamp);
         return { ...r, timeline };
       });
+      saveToStorage(STORAGE_RECORDS_KEY, next);
+      return { records: next };
+    });
+  },
+
+  updateFollowUp: (recordId, followUp) => {
+    set((state) => {
+      const next = state.records.map((r) =>
+        r.id === recordId ? { ...r, followUp } : r
+      );
       saveToStorage(STORAGE_RECORDS_KEY, next);
       return { records: next };
     });

@@ -37,7 +37,28 @@ export interface AnesthesiaRecord {
   extended?: boolean;
   comment?: string;
   timeline?: TimelineEvent[];
+  nurseId?: string;
+  followUp?: FollowUp;
 }
+
+export type FollowUpStatus = 'pending' | 'followed_up' | 'needs_on_site';
+
+export interface FollowUp {
+  status: FollowUpStatus;
+  note: string;
+  mentorName: string;
+  updatedAt: string;
+}
+
+export type AnomalyType = 'overtime' | 'time_up' | 'extended' | 'severe_redness' | 'strong_reaction';
+
+export const ANOMALY_TYPE_LABELS: Record<AnomalyType, string> = {
+  overtime: '超时',
+  time_up: '到点未揭',
+  extended: '已加时',
+  severe_redness: '严重红斑',
+  strong_reaction: '反应强烈',
+};
 
 export interface KnowledgeTip {
   id: string;

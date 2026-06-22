@@ -214,3 +214,136 @@
   background: rgba(#F97316, 0.1);
   color: #F97316;
 }
+
+.quickActions {
+  display: flex;
+  gap: $spacing-sm;
+  margin: $spacing-md 0;
+}
+
+.quickCard {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.quickIcon {
+  font-size: 40rpx;
+  flex-shrink: 0;
+}
+
+.quickTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+}
+
+.quickDesc {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-top: 2rpx;
+}
+
+.quickArrow {
+  margin-left: auto;
+  font-size: 32rpx;
+  color: $color-text-tertiary;
+}
+
+.trendCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.trendBars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 160rpx;
+  gap: $spacing-xs;
+}
+
+.trendBarItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.trendBarWrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.trendBar {
+  width: 100%;
+  max-width: 48rpx;
+  background: linear-gradient(180deg, rgba($color-primary, 0.8) 0%, rgba($color-primary, 0.3) 100%);
+  border-radius: 8rpx 8rpx 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 8rpx;
+}
+
+.trendBarCount {
+  font-size: 20rpx;
+  color: $color-text-white;
+  font-weight: $font-weight-semibold;
+}
+
+.trendBarLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 8rpx;
+}
+
+.anomalyGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-sm;
+}
+
+.anomalyCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.anomalyHead {
+  display: flex;
+  align-items: baseline;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.anomalyCount {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  line-height: 1;
+}
+
+.anomalyLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.anomalyTag {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  text-align: right;
+}

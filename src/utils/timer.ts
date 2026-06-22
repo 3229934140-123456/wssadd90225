@@ -1,4 +1,5 @@
-import type { AnesthesiaRecord, TaskStatus, TimelineEvent, TimelineProcessStatus } from '@/types';
+import type { AnesthesiaRecord, TaskStatus, TimelineEvent, TimelineProcessStatus, AnomalyType, Review } from '@/types';
+import { ANOMALY_TYPE_LABELS } from '@/types';
 
 export const OVERTIME_GRACE_MS = 2 * 60 * 1000;
 const TEN_MIN_MS = 10 * 60 * 1000;
@@ -257,4 +258,62 @@ export function computeStatsInRange(
 ) {
   const filtered = filterRecordsByRange(records, range);
   return computeStats(filtered);
+}
+
+export function computeStatsInRangeForNurse(
+  records: AnesthesiaRecord[],
+  reviews: Review[],
+  range: StatsTimeRange,
+  nurseId: string
+) {
+  const filtered = filterRecordsByRange(records, range).filter((r) => r.nurseId === nurseId);
+  const stats = computeStats(filtered);
+  const reviewedCount = filtered.filter((r) => reviews.some((rv) => rv.recordId === r.id)).length;
+  const coverage = filtered.length > 0 ? Math.round((reviewedCount / filtered.length) * 100) : 0;
+  return { ...stats, reviewedCount, coverage };
+}
+
+export function getAnomalyTypes(record: AnesthesiaRecord): AnomalyType[] {
+  const types: AnomalyType[] = [];
+  const effectiveStatus = getEffectiveStatus(record);
+  if (effectiveStatus === 'overtime') types.push('overtime');
+  if (effectiveStatus === 'time_up') types.push('time_up');
+  if (record.extended) types.push('extended');
+  if (record.rednessLevel === 'severe') types.push('severe_redness');
+  if (record.customerFeeling === '明显刺痛' || record.customerFeeling === '灼热感' || record.customerFeeling === '不适感强') {
+    types.push('strong_reaction');
+  }
+  return types;
+}
+
+export function groupRecordsByAnomalyType(records: AnesthesiaRecord[]): Record<AnomalyType, AnesthesiaRecord[]> {
+  const result: Record<string, AnesthesiaRecord[]> = {};
+  for (const type of Object.keys(ANOMALY_TYPE_LABELS)) {
+    result[type] = [];
+  }
+  for (const r of records) {
+    if (!isAbnormalRecord(r)) continue;
+    const types = getAnomalyTypes(r);
+    for (const t of types) {
+      result[t].push(r);
+    }
+  }
+  return result as Record<AnomalyType, AnesthesiaRecord[]>;
+}
+
+export function computeAnomalyTrend(records: AnesthesiaRecord[], days: number = 7): { date: string; count: number }[] {
+  const result: { date: string; count: number }[] = [];
+  const now = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    d.setHours(0, 0, 0, 0);
+    const start = d.getTime();
+    const end = start + 24 * 60 * 60 * 1000;
+    const count = records.filter(
+      (r) => r.startTime >= start && r.startTime < end && isAbnormalRecord(r)
+    ).length;
+    result.push({ date: `${d.getMonth() + 1}/${d.getDate()}`, count });
+  }
+  return result;
 }
