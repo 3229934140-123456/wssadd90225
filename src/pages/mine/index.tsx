@@ -85,6 +85,13 @@ const MinePage: React.FC = () => {
           </View>
           <Text className={styles.menuArrow}>›</Text>
         </View>
+        <View className={styles.menuItem} onClick={() => Taro.navigateTo({ url: '/pages/mentor/index' })}>
+          <View className={styles.menuItemLeft}>
+            <Text className={styles.menuIcon}>👩‍🏫</Text>
+            <Text className={styles.menuText}>带教看板</Text>
+          </View>
+          <Text className={styles.menuArrow}>›</Text>
+        </View>
       </View>
     </ScrollView>
   );

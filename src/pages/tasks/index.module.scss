@@ -138,3 +138,25 @@
 .taskList {
   margin-top: $spacing-sm;
 }
+
+.anomalyTagsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+  margin-top: -8rpx;
+  margin-bottom: $spacing-md;
+  margin-left: $spacing-md;
+}
+
+.anomalyTag {
+  font-size: $font-size-xs;
+  padding: 4rpx 16rpx;
+  border-radius: $radius-round;
+  background: rgba(#F97316, 0.1);
+  color: #F97316;
+}
+
+.anomalyTagRed {
+  background: rgba(#EF4444, 0.1);
+  color: #EF4444;
+}

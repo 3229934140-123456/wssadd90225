@@ -7,6 +7,8 @@ export default defineAppConfig({
     'pages/countdown/index',
     'pages/review/index',
     'pages/growth/index',
+    'pages/mentor/index',
+    'pages/nurse/index',
   ],
   window: {
     backgroundTextStyle: 'light',

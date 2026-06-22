@@ -1,6 +1,7 @@
-import type { AnesthesiaRecord, TaskStatus, TimelineEvent } from '@/types';
+import type { AnesthesiaRecord, TaskStatus, TimelineEvent, TimelineProcessStatus } from '@/types';
 
 export const OVERTIME_GRACE_MS = 2 * 60 * 1000;
+const TEN_MIN_MS = 10 * 60 * 1000;
 
 export function formatCountdown(remainingMs: number): string {
   if (remainingMs <= 0) return '00:00';
@@ -21,10 +22,9 @@ export function getTaskPhase(
   durationMinutes: number
 ): 'safe' | 'warning_10min' | 'time_up' | 'overtime' {
   const remaining = getRemainingTime(startTime, durationMinutes);
-  const tenMinMs = 10 * 60 * 1000;
   if (remaining <= -OVERTIME_GRACE_MS) return 'overtime';
   if (remaining <= 0) return 'time_up';
-  if (remaining <= tenMinMs) return 'warning_10min';
+  if (remaining <= TEN_MIN_MS) return 'warning_10min';
   return 'safe';
 }
 
@@ -59,6 +59,18 @@ export const TIMELINE_ICONS: Record<string, string> = {
   reviewed: '💬',
 };
 
+export const TIMELINE_PROCESS_STATUS_LABELS: Record<TimelineProcessStatus, string> = {
+  pending: '待处理',
+  handled: '已处理',
+  overtime: '已超时',
+};
+
+export const TIMELINE_PROCESS_STATUS_COLORS: Record<TimelineProcessStatus, string> = {
+  pending: '#F59E0B',
+  handled: '#10B981',
+  overtime: '#EF4444',
+};
+
 export function getTimelineLabel(type: string): string {
   return TIMELINE_LABELS[type] || type;
 }
@@ -67,13 +79,92 @@ export function getTimelineIcon(type: string): string {
   return TIMELINE_ICONS[type] || '⚪';
 }
 
+function computeNodeProcessStatus(
+  eventType: TimelineEvent['type'],
+  record: AnesthesiaRecord,
+  events: TimelineEvent[]
+): TimelineProcessStatus {
+  const effectiveStatus = getEffectiveStatus(record);
+  if (eventType === 'clockIn') return 'handled';
+
+  if (eventType === 'warning10min') {
+    if (effectiveStatus === 'completed') return 'handled';
+    if (effectiveStatus === 'counting') {
+      if (getTaskPhase(record.startTime, record.duration) === 'safe') return 'pending';
+      return 'handled';
+    }
+    if (effectiveStatus === 'warning_10min') return 'handled';
+    if (effectiveStatus === 'time_up' || effectiveStatus === 'overtime') return 'handled';
+    return 'pending';
+  }
+
+  if (eventType === 'timeUp') {
+    if (effectiveStatus === 'completed') return 'handled';
+    if (effectiveStatus === 'overtime') return 'handled';
+    if (effectiveStatus === 'time_up') return 'pending';
+    if (effectiveStatus === 'warning_10min' || effectiveStatus === 'counting') return 'pending';
+    return 'pending';
+  }
+
+  if (eventType === 'overtime') {
+    if (effectiveStatus === 'completed') return 'handled';
+    if (effectiveStatus === 'overtime') return 'overtime';
+    return 'pending';
+  }
+
+  if (eventType === 'completed') {
+    const hasCompleted = !!events.find((e) => e.type === 'completed') || effectiveStatus === 'completed';
+    return hasCompleted ? 'handled' : 'pending';
+  }
+
+  if (eventType === 'reviewed') {
+    const hasReviewed = events.some((e) => e.type === 'reviewed');
+    return hasReviewed ? 'handled' : 'pending';
+  }
+
+  return 'pending';
+}
+
 export function ensureTimeline(record: AnesthesiaRecord): TimelineEvent[] {
   const events: TimelineEvent[] = record.timeline ? [...record.timeline] : [];
+
   if (!events.find((e) => e.type === 'clockIn')) {
     events.push({ type: 'clockIn', timestamp: record.startTime });
   }
+
+  const warningTs = record.startTime + (record.duration * 60 * 1000 - TEN_MIN_MS);
+  if (Date.now() >= warningTs && !events.find((e) => e.type === 'warning10min')) {
+    events.push({ type: 'warning10min', timestamp: warningTs });
+  }
+
+  const timeUpTs = record.startTime + record.duration * 60 * 1000;
+  if (Date.now() >= timeUpTs && !events.find((e) => e.type === 'timeUp')) {
+    events.push({ type: 'timeUp', timestamp: timeUpTs });
+  }
+
+  const overtimeTs = record.startTime + (record.duration * 60 * 1000 + OVERTIME_GRACE_MS);
+  if (Date.now() >= overtimeTs && !events.find((e) => e.type === 'overtime')) {
+    events.push({ type: 'overtime', timestamp: overtimeTs });
+  }
+
   events.sort((a, b) => a.timestamp - b.timestamp);
-  return events;
+
+  return events.map((e) => ({
+    ...e,
+    processStatus: e.processStatus || computeNodeProcessStatus(e.type, record, events),
+  }));
+}
+
+export function isAbnormalRecord(record: AnesthesiaRecord): boolean {
+  const effectiveStatus = getEffectiveStatus(record);
+  if (effectiveStatus === 'overtime') return true;
+  if (effectiveStatus === 'time_up') return true;
+  if (record.extended) return true;
+  if (record.rednessLevel === 'severe') return true;
+  if (record.customerFeeling === '明显刺痛' || record.customerFeeling === '灼热感' || record.customerFeeling === '不适感强') {
+    return true;
+  }
+  return false;
 }
 
 export type StatsTimeRange = 'today' | 'week' | 'month' | 'all';
@@ -108,10 +199,12 @@ export function computeStats(records: AnesthesiaRecord[]) {
   const enriched = records.map((r) => ({
     ...r,
     effectiveStatus: getEffectiveStatus(r),
+    abnormal: isAbnormalRecord(r),
   }));
 
   const completedRecords = enriched.filter((r) => r.effectiveStatus === 'completed');
   const overtimeRecords = enriched.filter((r) => r.effectiveStatus === 'overtime');
+  const abnormalRecords = enriched.filter((r) => r.abnormal);
   const standardRecords = completedRecords.filter(
     (r) => r.customerFeeling && r.rednessLevel
   );
@@ -150,10 +243,11 @@ export function computeStats(records: AnesthesiaRecord[]) {
   return {
     consecutiveNoOvertimeDays,
     standardRecordCount: standardRecords.length,
-    anomalyReportCount: overtimeRecords.length,
+    anomalyReportCount: abnormalRecords.length,
     totalTasks: enriched.length,
     completedTasks: completedRecords.length,
     overtimeTasks: overtimeRecords.length,
+    abnormalTasks: abnormalRecords.length,
   };
 }
 

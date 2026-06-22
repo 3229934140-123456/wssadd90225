@@ -48,6 +48,15 @@
   font-weight: $font-weight-semibold;
   color: $color-text-primary;
   margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+}
+
+.sectionSub {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  font-weight: $font-weight-normal;
+  margin-left: 8rpx;
 }
 
 .formCard {
@@ -294,6 +303,21 @@
   margin-bottom: 4rpx;
 }
 
+.timelineHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-sm;
+}
+
+.timelineStatusTag {
+  font-size: $font-size-xs;
+  padding: 4rpx 16rpx;
+  border-radius: $radius-round;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .timelineTime {
   font-size: $font-size-sm;
   color: $color-text-tertiary;
@@ -305,4 +329,19 @@
   color: $color-text-secondary;
   margin-top: 4rpx;
   display: block;
+}
+
+.reviewList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.reviewRound {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  margin-left: 12rpx;
+  background: rgba($color-primary, 0.1);
+  padding: 2rpx 12rpx;
+  border-radius: $radius-round;
 }

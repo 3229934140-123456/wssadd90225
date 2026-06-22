@@ -5,9 +5,16 @@ import classnames from 'classnames';
 import dayjs from 'dayjs';
 import { useTaskStore } from '@/store/useTaskStore';
 import { rednessLabels, reviewRatingLabels } from '@/data/tasks';
-import { getTimelineLabel, getTimelineIcon, ensureTimeline, getEffectiveStatus } from '@/utils/timer';
+import {
+  getTimelineLabel,
+  getTimelineIcon,
+  ensureTimeline,
+  getEffectiveStatus,
+  TIMELINE_PROCESS_STATUS_LABELS,
+  TIMELINE_PROCESS_STATUS_COLORS,
+} from '@/utils/timer';
 import { generateId } from '@/utils/timer';
-import type { AnesthesiaRecord, ReviewRating, Review } from '@/types';
+import type { AnesthesiaRecord, ReviewRating, Review, TimelineProcessStatus } from '@/types';
 import styles from './index.module.scss';
 
 const feelingOptions = ['无痛感', '轻微刺痛', '明显刺痛', '灼热感', '不适感强'];
@@ -22,7 +29,6 @@ const ReviewPage: React.FC = () => {
   const [comment, setComment] = useState('');
   const [selectedRatings, setSelectedRatings] = useState<ReviewRating[]>([]);
   const [mentorComment, setMentorComment] = useState('');
-  const [submitted, setSubmitted] = useState(false);
   const { records, reviews, updateRecordReview, addReview, addTimelineEvent, hydrate, hydrated } = useTaskStore();
 
   useEffect(() => {
@@ -43,15 +49,7 @@ const ReviewPage: React.FC = () => {
     }
   }, [records, hydrated]);
 
-  const existingReview = record ? reviews.find((r) => r.recordId === record.id) : null;
-
-  useEffect(() => {
-    if (existingReview) {
-      setSelectedRatings(existingReview.ratings);
-      setMentorComment(existingReview.comment);
-      setSubmitted(true);
-    }
-  }, [existingReview]);
+  const recordReviews = record ? reviews.filter((r) => r.recordId === record.id) : [];
 
   const toggleRating = (rating: ReviewRating) => {
     setSelectedRatings((prev) =>
@@ -84,8 +82,8 @@ const ReviewPage: React.FC = () => {
 
   const handleSubmitReview = () => {
     if (!record) return;
-    if (selectedRatings.length === 0) {
-      Taro.showToast({ title: '请至少选择一个评价标签', icon: 'none' });
+    if (selectedRatings.length === 0 && !mentorComment.trim()) {
+      Taro.showToast({ title: '请选择评价标签或填写评语', icon: 'none' });
       return;
     }
 
@@ -99,8 +97,11 @@ const ReviewPage: React.FC = () => {
     };
 
     addReview(review);
-    addTimelineEvent(record.id, { type: 'reviewed', timestamp: Date.now() });
-    setSubmitted(true);
+    if (recordReviews.length === 0) {
+      addTimelineEvent(record.id, { type: 'reviewed', timestamp: Date.now() });
+    }
+    setSelectedRatings([]);
+    setMentorComment('');
     Taro.showToast({ title: '点评已提交', icon: 'success' });
   };
 
@@ -117,6 +118,9 @@ const ReviewPage: React.FC = () => {
   const isRecordSaved = !!record.customerFeeling && !!record.rednessLevel;
   const effectiveStatus = getEffectiveStatus(record);
   const timeline = ensureTimeline(record);
+
+  const getStatusColor = (s: TimelineProcessStatus) => TIMELINE_PROCESS_STATUS_COLORS[s];
+  const getStatusText = (s: TimelineProcessStatus) => TIMELINE_PROCESS_STATUS_LABELS[s];
 
   return (
     <ScrollView scrollY className={styles.container}>
@@ -162,8 +166,21 @@ const ReviewPage: React.FC = () => {
                   {idx < timeline.length - 1 && <View className={styles.timelineLine} />}
                 </View>
                 <View className={styles.timelineRight}>
-                  <Text className={styles.timelineLabel}>{getTimelineLabel(event.type)}</Text>
-                  <Text className={styles.timelineTime}>{dayjs(event.timestamp).format('HH:mm:ss')}</Text>
+                  <View className={styles.timelineHead}>
+                    <Text className={styles.timelineLabel}>{getTimelineLabel(event.type)}</Text>
+                    {event.processStatus && (
+                      <View
+                        className={styles.timelineStatusTag}
+                        style={{
+                          backgroundColor: `${getStatusColor(event.processStatus)}15`,
+                          color: getStatusColor(event.processStatus),
+                        }}
+                      >
+                        <Text>{getStatusText(event.processStatus)}</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text className={styles.timelineTime}>{dayjs(event.timestamp).format('YYYY-MM-DD HH:mm:ss')}</Text>
                   {event.note && <Text className={styles.timelineNote}>{event.note}</Text>}
                 </View>
               </View>
@@ -237,7 +254,9 @@ const ReviewPage: React.FC = () => {
       </View>
 
       <View className={styles.section}>
-        <Text className={styles.sectionTitle}>师傅点评</Text>
+        <Text className={styles.sectionTitle}>
+          师傅点评 {recordReviews.length > 0 && <Text className={styles.sectionSub}>({recordReviews.length}次点评)</Text>}
+        </Text>
         <View className={styles.formCard}>
           <View className={styles.formItem}>
             <Text className={styles.formLabel}>评价标签（可多选）</Text>
@@ -246,7 +265,7 @@ const ReviewPage: React.FC = () => {
                 <View
                   key={key}
                   className={classnames(styles.optionTag, selectedRatings.includes(key) && styles.optionTagActive)}
-                  onClick={() => !submitted && toggleRating(key)}
+                  onClick={() => toggleRating(key)}
                 >
                   <Text>{label}</Text>
                 </View>
@@ -255,39 +274,47 @@ const ReviewPage: React.FC = () => {
           </View>
 
           <View className={styles.formItem}>
-            <Text className={styles.formLabel}>点评内容</Text>
+            <Text className={styles.formLabel}>评语 / 补充建议</Text>
             <Textarea
               className={styles.textArea}
-              placeholder="写下对这次操作的评价..."
+              placeholder="写下对这次操作的评价或补充建议..."
               value={mentorComment}
-              onInput={(e) => !submitted && setMentorComment(e.detail.value)}
-              disabled={submitted}
+              onInput={(e) => setMentorComment(e.detail.value)}
             />
           </View>
         </View>
 
-        {!submitted && (
-          <View className={styles.submitBtn} onClick={handleSubmitReview} style={{ marginTop: '24rpx' }}>
-            <Text>提交点评</Text>
-          </View>
-        )}
+        <View className={styles.submitBtn} onClick={handleSubmitReview} style={{ marginTop: '24rpx' }}>
+          <Text>{recordReviews.length === 0 ? '提交点评' : '追加点评'}</Text>
+        </View>
 
-        {submitted && existingReview && (
-          <View className={styles.reviewCard} style={{ marginTop: '24rpx' }}>
-            <View className={styles.reviewHeader}>
-              <Text className={styles.mentorName}>{existingReview.mentorName}</Text>
-              <Text className={styles.reviewTime}>{existingReview.createdAt}</Text>
-            </View>
-            <View className={styles.ratingTags}>
-              {existingReview.ratings.map((rating) => (
-                <View key={rating} className={styles.ratingTag}>
-                  <Text>{reviewRatingLabels[rating]}</Text>
+        {recordReviews.length > 0 && (
+          <View className={styles.reviewList} style={{ marginTop: '24rpx' }}>
+            {[...recordReviews].reverse().map((review, idx) => (
+              <View key={review.id} className={styles.reviewCard}>
+                <View className={styles.reviewHeader}>
+                  <View>
+                    <Text className={styles.mentorName}>{review.mentorName}</Text>
+                    {recordReviews.length > 1 && (
+                      <Text className={styles.reviewRound}>第 {recordReviews.length - idx} 次</Text>
+                    )}
+                  </View>
+                  <Text className={styles.reviewTime}>{review.createdAt}</Text>
                 </View>
-              ))}
-            </View>
-            {existingReview.comment && (
-              <Text className={styles.reviewComment}>{existingReview.comment}</Text>
-            )}
+                {review.ratings.length > 0 && (
+                  <View className={styles.ratingTags}>
+                    {review.ratings.map((rating) => (
+                      <View key={rating} className={styles.ratingTag}>
+                        <Text>{reviewRatingLabels[rating]}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+                {review.comment && (
+                  <Text className={styles.reviewComment}>{review.comment}</Text>
+                )}
+              </View>
+            ))}
           </View>
         )}
       </View>

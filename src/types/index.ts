@@ -12,10 +12,13 @@ export type TaskStatus = 'pending' | 'counting' | 'warning_10min' | 'time_up' | 
 
 export type TimelineEventType = 'clockIn' | 'warning10min' | 'timeUp' | 'overtime' | 'completed' | 'reviewed';
 
+export type TimelineProcessStatus = 'pending' | 'handled' | 'overtime';
+
 export interface TimelineEvent {
   type: TimelineEventType;
   timestamp: number;
   note?: string;
+  processStatus?: TimelineProcessStatus;
 }
 
 export interface AnesthesiaRecord {
